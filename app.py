@@ -37,5 +37,5 @@ def root():
 
 @app.get("/health")
 def health():
-    """Health-check endpoint — used by Render and monitoring tools to verify the app is alive."""
+    """Health-check endpoint — used by Render and monitoring tools."""
     return {"status": "ok"}

@@ -1,0 +1,16 @@
+# pyproject.toml
+# Configuration for Ruff — a fast Python linter.
+# Ruff catches common mistakes (unused imports, bad formatting, style issues)
+# before code reaches production.
+
+[tool.ruff]
+# Check all Python files in the project.
+include = ["*.py", "tests/*.py"]
+
+# Minimum Python version to target.
+target-version = "py311"
+
+[tool.ruff.lint]
+# E = pycodestyle errors, F = Pyflakes (unused imports, undefined names)
+# These are the most important rules for beginners to follow.
+select = ["E", "F"]

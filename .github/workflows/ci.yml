@@ -1,14 +1,13 @@
 # .github/workflows/ci.yml
 #
-# This is the CI (Continuous Integration) pipeline.
+# CI (Continuous Integration) pipeline.
 #
-# CI means: every time code is pushed, GitHub automatically runs a series of
-# checks to verify the code still works. If a check fails, the push is flagged
-# so the problem is caught before it reaches production.
+# Every push to main triggers this pipeline on a fresh GitHub-hosted machine.
+# If any step fails, the pipeline stops and the commit is flagged with a red ✗.
+# This catches broken code before it ever reaches production.
 
 name: CI
 
-# Trigger this pipeline on every push to the main branch.
 on:
   push:
     branches: [main]
@@ -16,29 +15,43 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    name: Install & verify
-    runs-on: ubuntu-latest   # GitHub provides a free Linux runner
+  build:
+    name: Lint, syntax check & test
+    runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Check out the repository code onto the runner.
+      # Step 1: Download the repository code onto the runner machine.
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Install the exact Python version we develop with locally.
+      # Step 2: Install the same Python version used in development.
+      # Pinning the version prevents surprise failures from Python upgrades.
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # Step 3: Install all packages listed in requirements.txt.
-      # If a package is missing or a version conflict exists, this step fails
-      # loudly here rather than silently at runtime in production.
+      # Step 3: Install all packages from requirements.txt.
+      # Fails loudly if a package is missing or versions conflict —
+      # better to catch this here than at runtime in production.
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # Step 4: Verify the app can be imported without errors.
-      # This catches syntax errors, missing imports, and bad startup code
-      # without actually starting the server.
-      - name: Verify app imports
-        run: python -c "import app; print('App imported successfully')"
+      # Step 4: Syntax check.
+      # py_compile parses app.py and raises a SyntaxError immediately if
+      # there is a typo like a missing colon or unclosed bracket.
+      # This is faster than importing the module and catches pure syntax bugs.
+      - name: Syntax check
+        run: python -m py_compile app.py && echo "Syntax OK"
+
+      # Step 5: Linting with Ruff.
+      # Ruff scans for code quality issues: unused imports, undefined variables,
+      # and style violations. Catching these early keeps the codebase clean.
+      - name: Lint with Ruff
+        run: ruff check .
+
+      # Step 6: Run tests with pytest.
+      # pytest runs every function starting with "test_" in the tests/ folder.
+      # -v (verbose) prints each test name so failures are easy to pinpoint.
+      - name: Run tests
+        run: pytest -v
