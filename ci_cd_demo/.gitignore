@@ -1,0 +1,12 @@
+# Virtual environment — contains hundreds of installed packages.
+# Committing it bloats the repo and breaks on other machines.
+# Teammates recreate it with: python -m venv venv && pip install -r requirements.txt
+venv/
+
+# Secret environment variables — NEVER commit this file.
+# Use .env.example as the safe, committable template instead.
+.env
+
+# Python bytecode cache — auto-generated, not source code.
+__pycache__/
+*.pyc

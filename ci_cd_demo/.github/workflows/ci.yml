@@ -1,0 +1,44 @@
+# .github/workflows/ci.yml
+#
+# This is the CI (Continuous Integration) pipeline.
+#
+# CI means: every time code is pushed, GitHub automatically runs a series of
+# checks to verify the code still works. If a check fails, the push is flagged
+# so the problem is caught before it reaches production.
+
+name: CI
+
+# Trigger this pipeline on every push to the main branch.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Install & verify
+    runs-on: ubuntu-latest   # GitHub provides a free Linux runner
+
+    steps:
+      # Step 1: Check out the repository code onto the runner.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Install the exact Python version we develop with locally.
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Step 3: Install all packages listed in requirements.txt.
+      # If a package is missing or a version conflict exists, this step fails
+      # loudly here rather than silently at runtime in production.
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Step 4: Verify the app can be imported without errors.
+      # This catches syntax errors, missing imports, and bad startup code
+      # without actually starting the server.
+      - name: Verify app imports
+        run: python -c "import app; print('App imported successfully')"
